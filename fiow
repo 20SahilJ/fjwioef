@@ -1,0 +1,47 @@
+for iter in range(N_iters):
+          # Init
+          A_num = [[0. for i in range(self.L)] for j in range(self.L)]
+          A_den = [[0. for i in range(self.L)] for j in range(self.L)]
+
+          O_num = [[0. for i in range(len(self.O[0]))] for j in range(len(self.O))]
+          O_den = [[0. for i in range(len(self.O[0]))] for j in range(len(self.O))]
+
+          for sequence in X:
+            M = len(sequence)
+            alphas = self.forward(sequence, True)
+            betas = self.backward(sequence, True)
+
+            for i in range(M-1):
+              a_num_denom = 0
+              a_den_denom = 0
+              for a_p in range(len(self.A)):
+                for b_p in range(len(self.A[0])):
+                  a_num_denom +=alphas[i+1][a_p]*self.O[b_p][sequence[i+1]]*self.A[a_p][b_p]*betas[i+2][b_p]
+                a_den_denom += alphas[i+1][a_p]*betas[i+1][a_p]
+              for a in range(len(self.A)):
+                for b in range(len(self.A[0])):
+                  a_num_num = alphas[i+1][a]*self.O[b][sequence[i+1]]*self.A[a][b]*betas[i+2][b]
+                  if a_num_denom != 0:
+                    A_num[a][b] += a_num_num/a_num_denom  
+                  
+                  a_den_num =alphas[i+1][a]*betas[i+1][a]   
+                  if a_den_denom != 0:
+                    A_den[a][b] += a_den_num/a_den_denom   
+            
+            #Making O matrix
+            for i in range(M):
+              o_denom = 0
+              for a_p in range(len(self.O)):
+                o_denom += alphas[i+1][a_p]*betas[i+1][a_p]
+              for a in range(len(self.O)):
+                for w in range(len(self.O[0])):
+                  o_num_num = 0
+                  if sequence[i] == w and o_denom != 0:
+                    o_num_num = alphas[i+1][a]*betas[i+1][a]
+                    O_num[a][w] += o_num_num/o_denom
+                  if o_denom != 0:
+                    o_den_num = alphas[i+1][a]*betas[i+1][a]
+                    O_den[a][w] += o_den_num/o_denom
+          
+          self.A = np.divide(A_num, A_den)
+          self.O = np.divide(O_num, O_den)
